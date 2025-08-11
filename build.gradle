@@ -59,27 +59,8 @@ subprojects {
 
     // Configure Maven publishing.
     publishing {
-        publications {
-            mavenJava(MavenPublication) {
-                groupId project.group
-                artifactId project.archivesBaseName
-                version project.version
-                from components.java
-            }
-        }
-
-        repositories {
-            def token = providers.environmentVariable("SAPS_TOKEN")
-            if (token.isPresent()) {
-                maven {
-                    url "https://maven.saps.dev/releases"
-                    credentials {
-                        username = "mikeymods"
-                        password = token.get()
-                    }
-                }
-            }
-        }
+        publications {}
+        repositories {}
     }
 }
 
@@ -97,48 +78,6 @@ publishMods {
     changelog = changelogData
     version = project.mod_version
     type = STABLE
-
-    def createOptions = (String name) -> {
-        publishOptions {
-            file = project.provider { project(":$name").tasks.remapJar }.flatMap { it.archiveFile }
-            displayName = "[${name.toUpperCase()}][${minecraft_version}] Auto Clicker ${mod_version}"
-            modLoaders.add(name.toLowerCase())
-        }
-    }
-
-    def curseForgeOptions = curseforgeOptions {
-        projectId = project.curseforge_id
-        accessToken = providers.environmentVariable("CURSE_DEPLOY_TOKEN")
-        minecraftVersions.add("${minecraft_version}")
-        javaVersions.add(JavaVersion.VERSION_21)
-    }
-
-    def modrinthOptions = modrinthOptions {
-        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-        projectId = project.modrinth_id
-        minecraftVersions.add("${minecraft_version}")
-    }
-
-    def fabricOptions = createOptions("fabric")
-    def neoforgeOptions = createOptions("neoforge")
-
-    curseforge("curseforgeFabric") {
-        from(curseForgeOptions, fabricOptions)
-        requires("fabric-api")
-    }
-
-    curseforge("curseforgeNeoforge") {
-        from(curseForgeOptions, neoforgeOptions)
-    }
-
-    modrinth("modrinthFabric") {
-        from(modrinthOptions, fabricOptions)
-        requires("fabric-api")
-    }
-
-    modrinth("modrinthNeoforge") {
-        from(modrinthOptions, neoforgeOptions)
-    }
 
     github {
         file = project.provider { project(":neoforge").tasks.remapJar }.flatMap { it.archiveFile }
